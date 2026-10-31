@@ -1,6 +1,6 @@
 HELP.md
 target/
-.mvn/wrapper/maven-wrapper.jar
+**/.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
 
@@ -20,14 +20,22 @@ target/
 *.ipr
 
 ### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
+**/nbproject/private/
+**/nbbuild/
+**/dist/
+**/nbdist/
+**/.nb-gradle/
 build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
 ### VS Code ###
 .vscode/
+
+### Local environment ###
+.env
+.env.*
+!.env.example
+
+### Work files ###
+docker/start.ps1
