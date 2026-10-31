@@ -4,6 +4,7 @@ import cz.klatismrk.market_data_producer.model.DTOs.TickerPriceDTO;
 import cz.klatismrk.market_data_producer.model.enums.SymbolEnum;
 import cz.klatismrk.market_data_producer.utils.UrlUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -45,11 +47,10 @@ public class TickerPriceCaller {
         .GET()
         .build();
 
-    final HttpResponse<String> tickerPricesRaw;
-    try {
-      tickerPricesRaw = client.send(request, HttpResponse.BodyHandlers.ofString());
-    } catch (IOException | InterruptedException e) {
-      log.error("Error while calling ticker price API", e);
+    final Date apiCalled = new Date();
+    final HttpResponse<String> tickerPricesRaw = getStringResponse(request);
+    if (tickerPricesRaw == null) {
+      log.info("Calling {} returned null response", url);
       return;
     }
     if (!HttpStatus.OK.equals(HttpStatus.valueOf(tickerPricesRaw.statusCode()))) {
@@ -61,6 +62,15 @@ public class TickerPriceCaller {
         tickerPricesRaw.body(),
         jsonMapper.getTypeFactory().constructCollectionType(List.class, TickerPriceDTO.class)
     );
+  }
+
+  private @Nullable HttpResponse<String> getStringResponse(HttpRequest request) {
+    try {
+      return client.send(request, HttpResponse.BodyHandlers.ofString());
+    } catch (IOException | InterruptedException e) {
+      log.info("Error while calling {}", request.uri(), e);
+      return null;
+    }
   }
 
   private static String getSymbolsQueryParam() {
