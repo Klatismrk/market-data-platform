@@ -18,24 +18,24 @@ public class UrlUtilsTest {
   void testBuildUrlWithoutParams() {
     String expectedUrl = URL_WITHOUT_PARAMS;
     String actualUrl = UrlUtils.buildUrl(API_URL, ENDPOINT);
-    assertUrlsEqueals(expectedUrl, actualUrl);
+    assertUrlsEquals(expectedUrl, actualUrl);
   }
 
   @Test
   void testBuildUrlWithOneParam() {
     String expectedUrl = URL_WITHOUT_PARAMS + QUESTION_MARK + PARAM_1;
     String actualUrl = UrlUtils.buildUrl(API_URL, ENDPOINT, PARAM_1);
-    assertUrlsEqueals(expectedUrl, actualUrl);
+    assertUrlsEquals(expectedUrl, actualUrl);
   }
 
   @Test
   void testBuildUrlWithTwoParams() {
     String expectedUrl = URL_WITHOUT_PARAMS + QUESTION_MARK + PARAM_1 + AMPERSAND + PARAM_2;
     String actualUrl = UrlUtils.buildUrl(API_URL, ENDPOINT, PARAM_1, PARAM_2);
-    assertUrlsEqueals(expectedUrl, actualUrl);
+    assertUrlsEquals(expectedUrl, actualUrl);
   }
 
-  private static void assertUrlsEqueals(String expectedUrl, String actualUrl) {
+  private static void assertUrlsEquals(String expectedUrl, String actualUrl) {
     assertEquals(expectedUrl, actualUrl, "Expected URL: " + expectedUrl + ", but got: " + actualUrl);
   }
 
