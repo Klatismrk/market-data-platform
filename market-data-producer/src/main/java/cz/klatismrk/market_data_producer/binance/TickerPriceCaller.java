@@ -1,7 +1,9 @@
 package cz.klatismrk.market_data_producer.binance;
 
+import cz.klatismrk.market_data_producer.kafka.KafkaSender;
 import cz.klatismrk.market_data_producer.model.DTOs.TickerPriceDTO;
 import cz.klatismrk.market_data_producer.model.enums.SymbolEnum;
+import cz.klatismrk.market_data_producer.model.wrappers.TickerPriceMessageWrapper;
 import cz.klatismrk.market_data_producer.utils.UrlUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
@@ -26,6 +28,7 @@ import java.util.List;
 public class TickerPriceCaller {
 
   private final JsonMapper jsonMapper;
+  private final KafkaSender kafkaSender;
 
   private static final String BINANCE_API_URL = "https://api.binance.com/api/v3";
   private static final String TICKER_PRICE_ENDPOINT = "/ticker/price";
@@ -34,11 +37,12 @@ public class TickerPriceCaller {
       .connectTimeout(Duration.ofSeconds(5))
       .build();
 
-  TickerPriceCaller(JsonMapper jsonMapper) {
+  TickerPriceCaller(JsonMapper jsonMapper, KafkaSender kafkaSender) {
     this.jsonMapper = jsonMapper;
+    this.kafkaSender = kafkaSender;
   }
 
-  @Scheduled(fixedRate = 1000)
+  @Scheduled(fixedDelay = 1000)
   public void callTickerPrice() {
     final String url = UrlUtils.buildUrl(BINANCE_API_URL, TICKER_PRICE_ENDPOINT, getSymbolsQueryParam());
     HttpRequest request = HttpRequest.newBuilder()
@@ -47,7 +51,7 @@ public class TickerPriceCaller {
         .GET()
         .build();
 
-    final Date apiCalled = new Date();
+    final long apiCalled = new Date().getTime();
     final HttpResponse<String> tickerPricesRaw = getStringResponse(request);
     if (tickerPricesRaw == null) {
       log.info("Calling {} returned null response", url);
@@ -62,6 +66,9 @@ public class TickerPriceCaller {
         tickerPricesRaw.body(),
         jsonMapper.getTypeFactory().constructCollectionType(List.class, TickerPriceDTO.class)
     );
+    for (TickerPriceDTO tickerPrice : tickerPrices) {
+      kafkaSender.send(new TickerPriceMessageWrapper(tickerPrice, apiCalled));
+    }
   }
 
   private @Nullable HttpResponse<String> getStringResponse(HttpRequest request) {
